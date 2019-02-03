@@ -24,6 +24,7 @@ from tqdm import tqdm
 xView processing helper functions for use in data processing.
 """
 
+
 def scale(x,range1=(0,0),range2=(0,0)):
     """
     Linear scaling for a value x
@@ -51,24 +52,19 @@ def get_labels(fname):
     """
     with open(fname) as f:
         data = json.load(f)
-
+    
     coords = np.zeros((len(data['features']),4))
     chips = np.zeros((len(data['features'])),dtype="object")
     classes = np.zeros((len(data['features'])))
-
-    for i in tqdm(range(len(data['features']))):
-        if data['features'][i]['properties']['bounds_imcoords'] != []:
-            b_id = data['features'][i]['properties']['image_id']
-            val = np.array([int(num) for num in data['features'][i]['properties']['bounds_imcoords'].split(",")])
+    for i in range(len(data['features'])):
+        if data['features'][i]['properties']['bb'] != []:
+            b_id = data['features'][i]['properties']['Joined lay']
+            val = np.array([int(num) for num in data['features'][i]['properties']['bb'].strip('()').split(",")])
             chips[i] = b_id
-            classes[i] = data['features'][i]['properties']['type_id']
-            if val.shape[0] != 4:
-                print("Issues at %d!" % i)
-            else:
-                coords[i] = val
+            classes[i] = data['features'][i]['properties']['type']
+            coords[i] = val
         else:
             chips[i] = 'None'
-
     return coords, chips, classes
 
 

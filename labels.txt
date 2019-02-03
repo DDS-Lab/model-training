@@ -1,0 +1,2 @@
+1:Flooded / Damaged Building
+2:Non-damaged Building
