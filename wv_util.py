@@ -67,6 +67,51 @@ def get_labels(fname):
             chips[i] = 'None'
     return coords, chips, classes
 
+def get_labels_w_id(fname):
+    """
+    Gets label data from a geojson label file
+    Args:
+        fname: file path to an xView geojson label file
+    Output:
+        Returns three arrays: coords, chips, and classes corresponding to the
+            coordinates, file-names, and classes for each ground truth.
+    """
+    x_buffer = 15
+    y_buffer = 15
+    right_shift = 5 # how much shift to the right 
+    offset_vector = np.array([-x_buffer + right_shift, y_buffer, x_buffer + right_shift, -y_buffer])  # shift to the rihgt
+    with open(fname) as f:
+        data = json.load(f)
+    coords = np.zeros((len(data['features']),4))
+    chips = np.zeros((len(data['features'])),dtype="object")
+    classes = np.zeros((len(data['features'])))
+    uids = np.zeros((len(data['features'])))
+    for i in tqdm(range(len(data['features']))):
+        if data['features'][i]['properties']['bb'] != []:
+            try:
+                b_id = data['features'][i]['properties']['Joined lay']
+                bbox = data['features'][i]['properties']['bb'][1:-1].split(",")
+                val = np.array([int(num) for num in data['features'][i]['properties']['bb'][1:-1].split(",")])
+                ymin = val[3]
+                ymax = val[1]
+                val[1] =  ymin
+                val[3] = ymax
+                chips[i] = b_id
+                classes[i] = data['features'][i]['properties']['type']
+                uids[i] = int(data['features'][i]['properties']['uniqueid'])
+            except:
+                  pass
+            if val.shape[0] != 4:
+                print("Messed up: %d!" % i)
+            else:
+                coords[i] = val
+        else:
+            chips[i] = 'None'
+
+    coords = np.add(coords, offset_vector)
+
+    return coords, chips, classes, uids
+
 
 def boxes_from_coords(coords):
     """

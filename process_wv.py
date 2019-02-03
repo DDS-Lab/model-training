@@ -30,6 +30,7 @@ import wv_util as wv
 import tfr_util as tfr
 import aug_util as aug
 import csv
+import rasterio
 
 """
   A script that processes xView imagery. 
@@ -82,6 +83,7 @@ def get_images_from_filename_array(coords,chips,classes,folder_names,res=(250,25
             #Needs to be "X.tif" ie ("5.tif")
             name = fname.split("\\")[-1]
             arr = wv.get_image(fname)
+            print(arr.shape)
             
             img,box,cls = wv.chip_image(arr,coords[chips==name],classes[chips==name],res)
 
@@ -159,7 +161,8 @@ if __name__ == "__main__":
     train_writer = tf.python_io.TFRecordWriter("xview_train_%s.record" % args.suffix)
     test_writer = tf.python_io.TFRecordWriter("xview_test_%s.record" % args.suffix)
 
-    coords,chips,classes = wv.get_labels(args.json_filepath)
+    coords,chips,classes,uids = wv.get_labels_w_id(args.json_filepath)
+    
 
     for res_ind, it in enumerate(res):
         tot_box = 0
@@ -173,7 +176,10 @@ if __name__ == "__main__":
             #Needs to be "X.tif", ie ("5.tif")
             #Be careful!! Depending on OS you may need to change from '/' to '\\'.  Use '/' for UNIX and '\\' for windows
             name = fname.split("/")[-1]
-            arr = wv.get_image(fname)
+            #arr = wv.get_image(fname)
+            with rasterio.open(fname, "r") as r:
+                arr = r.read()
+                arr = np.rollaxis(arr,0,3)
 
             im,box,classes_final = wv.chip_image(arr,coords[chips==name],classes[chips==name],it)
 
